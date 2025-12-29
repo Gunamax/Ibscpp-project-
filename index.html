@@ -15,29 +15,23 @@
         body { 
             font-family: 'Poppins', sans-serif; 
             margin: 0; 
-            /* FIX 1: மேலிருந்து 50px இடைவெளி விட்டிருக்கிறேன். இனி நோட்டிபிகேஷன் பார் இடிக்காது */
+            /* மேலே இடைவெளி அப்படியே இருக்கு, இது அவசியம் */
             padding: 50px 20px 20px 20px; 
             color: var(--text); 
             min-height: 100vh; display: flex; flex-direction: column; align-items: center; 
             overflow-x: hidden; 
         }
         
-        /* BACKGROUND */
         body::before {
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1506521781263-d8422e82f27a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
             background-size: cover; background-position: center; z-index: -1;
         }
 
-        /* HEADER */
         .header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        
-        /* MENU BUTTON FIX: கொஞ்சம் பெரிதாக்கியுள்ளேன் */
-        .menu-btn { font-size: 32px; border: none; background: none; cursor: pointer; color: #fff; filter: drop-shadow(2px 2px 2px #000); padding: 10px; }
-        
+        .menu-btn { font-size: 28px; border: none; background: none; cursor: pointer; color: #fff; filter: drop-shadow(2px 2px 2px #000); }
         .app-title { font-weight: 700; font-size: 1.8em; color: #fff; text-shadow: 2px 2px 4px #000; letter-spacing: 1px; margin: 0;}
         
-        /* LIVE CLOCK */
         .live-clock {
             color: #fff; font-size: 1.2em; font-weight: 600; margin-bottom: 25px;
             text-shadow: 1px 1px 3px #000; background: rgba(0,0,0,0.5);
@@ -98,23 +92,16 @@
         .log-list { list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto; font-size: 0.85em; text-align: left; }
         .log-list li { padding: 5px 0; border-bottom: 1px solid #eee; color: #555; }
 
-        /* SIDEBAR */
         .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: white; transition: 0.3s; z-index: 2000; box-shadow: 5px 0 20px rgba(0,0,0,0.2); }
         .sidebar.active { left: 0; }
         .sidebar-header { background: var(--primary); padding: 20px; color: white; display: flex; flex-direction: column; }
         
-        /* FIX 2: BACK BUTTON - இதை பெரிதாக்கி, பேடிங் கொடுத்துள்ளேன் */
-        .menu-back-btn { 
-            background: rgba(255,255,255,0.2); /* லேசான பின்னணி தெரியும் */
-            border: none; color: white; 
-            font-size: 1.5em; /* எழுத்து பெரிது */
-            font-weight: bold; cursor: pointer; margin-bottom: 15px; 
-            display: flex; align-items: center; gap: 15px; align-self: flex-start;
-            padding: 15px 20px; /* தொடுவதற்கு வசதியாக இடைவெளி */
-            border-radius: 8px; /* வளைவான மூலைகள் */
-            width: 100%; /* அகலமாக இருக்கும் */
+        /* REVERTED: பழைய சிம்பிள் டிசைன் (Simple Arrow) */
+        .menu-back-btn {
+            background: none; border: none; color: white;
+            font-size: 1.2em; font-weight: bold; cursor: pointer;
+            margin-bottom: 15px; display: flex; align-items: center; gap: 10px;
         }
-        .menu-back-btn:active { background: rgba(255,255,255,0.4); }
 
         .menu-item { padding: 15px 20px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 15px; font-size: 1.1em; color: #444; }
         .menu-item:hover { background: #f1f2f6; }
@@ -277,4 +264,3 @@
     </script>
 </body>
 </html>
-
