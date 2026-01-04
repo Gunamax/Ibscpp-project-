@@ -27,16 +27,29 @@
             background-size: cover; background-position: center; z-index: -1;
         }
 
-        .header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .menu-btn { font-size: 32px; border: none; background: none; cursor: pointer; color: #fff; filter: drop-shadow(2px 2px 2px #000); padding: 10px; }
         
         .app-title { font-weight: 700; font-size: 1.8em; color: #fff; text-shadow: 2px 2px 4px #000; letter-spacing: 1px; margin: 0;}
         
-        .live-clock {
-            color: #fff; font-size: 1.2em; font-weight: 600; margin-bottom: 25px;
-            text-shadow: 1px 1px 3px #000; background: rgba(0,0,0,0.5);
-            padding: 8px 25px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.4);
+        /* --- NEW STYLE: Available Slots Display --- */
+        .availability-box {
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            padding: 8px 25px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.5);
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .live-clock {
+            color: #fff; font-size: 1.1em; font-weight: 600; margin-bottom: 25px;
+            text-shadow: 1px 1px 3px #000; background: rgba(0,0,0,0.3);
+            padding: 5px 20px; border-radius: 30px; 
         }
 
         .admin-only { display: none; }
@@ -120,6 +133,8 @@
         <div class="app-title">Smart Parking</div>
         <div id="statusBadge" class="badge waiting admin-only">Waiting...</div>
     </div>
+
+    <div id="availabilityDisplay" class="availability-box">Available Slots: 6</div>
 
     <div id="liveClock" class="live-clock">Loading...</div>
 
@@ -284,6 +299,18 @@
             <button id="btn${i}" class="btn btn-book" onclick="userBookAction(${i})">Book</button></div>`;
         }
 
+        // --- NEW FUNCTION: Calculate & Update Available Slots ---
+        function updateAvailableCount() {
+            let freeCount = 0;
+            for(let i=1; i<=6; i++) {
+                // If NOT occupied AND NOT booked = FREE
+                if(!slotState[i].sensor && !slotState[i].booked) {
+                    freeCount++;
+                }
+            }
+            document.getElementById('availabilityDisplay').innerText = "Available Slots: " + freeCount;
+        }
+
         let client;
         try { client = new Paho.MQTT.Client(MQTT_HOST, MQTT_PORT, "WebClient-"+parseInt(Math.random()*1000)); client.connect({ onSuccess: onConnect, onFailure: onFail, useSSL: true }); } 
         catch(e) { console.log("MQTT Error"); }
@@ -379,6 +406,8 @@
                 btn.className = "btn btn-book"; btn.innerText = "BOOK"; btn.onclick = () => userBookAction(i); btn.disabled = false; 
                 inTimeEl.style.color = "#555"; inTimeEl.style.fontWeight="normal"; 
             }
+            // Update the count every time the state changes
+            updateAvailableCount();
         }
         
         function toggleBook(i, shouldBook) { if(!client) return; let message = new Paho.MQTT.Message(shouldBook ? "true" : "false"); message.destinationName = ROOT_TOPIC + "/bookings/s" + i; message.retained = true; client.send(message); }
@@ -386,3 +415,5 @@
     </script>
 </body>
 </html>
+
+    
