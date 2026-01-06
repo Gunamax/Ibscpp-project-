@@ -7,127 +7,78 @@
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root { --primary: #0984e3; --success: #00b894; --danger: #d63031; --warn: #e17055; --text: #2d3436; }
         
         body { 
-            font-family: 'Poppins', sans-serif; 
-            margin: 0; 
-            padding: 50px 20px 20px 20px; 
-            color: var(--text); 
-            min-height: 100vh; display: flex; flex-direction: column; align-items: center; 
-            overflow-x: hidden; 
+            font-family: 'Poppins', sans-serif; margin: 0; padding: 50px 20px 20px 20px; 
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; 
         }
         
         body::before {
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            /* பின்னணி படம் தெளிவாகத் தெரிய opacity 0.4 இல் இருந்து 0.1 ஆக மாற்றப்பட்டுள்ளது */
             background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url('https://images.unsplash.com/photo-1506521781263-d8422e82f27a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
             background-size: cover; background-position: center; z-index: -1;
         }
 
         .header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .menu-btn { font-size: 32px; border: none; background: none; cursor: pointer; color: #fff; filter: drop-shadow(2px 2px 2px #000); padding: 10px; }
-        
         .app-title { font-weight: 700; font-size: 1.8em; color: #fff; text-shadow: 2px 2px 4px #000; letter-spacing: 1px; margin: 0;}
         
-        /* --- NEW DESIGN: Available Slots Display --- */
         .availability-box {
-            background: linear-gradient(135deg, #6c5ce7, #a29bfe); /* புதிய கலர் டிசைன் */
-            color: #fff;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 1.3em;
-            margin-bottom: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
-            text-align: center;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-            backdrop-filter: blur(5px);
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: #fff;
+            padding: 15px 30px; border-radius: 50px; font-weight: 700; font-size: 1.3em; margin-bottom: 20px;
+            border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
+            text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); backdrop-filter: blur(5px);
             animation: pulse 2s infinite;
         }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        .live-clock {
-            color: #fff; font-size: 1.1em; font-weight: 600; margin-bottom: 25px;
-            text-shadow: 1px 1px 3px #000; background: rgba(0,0,0,0.6);
-            padding: 5px 20px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.2);
-        }
-
+        .live-clock { color: #fff; font-size: 1.1em; font-weight: 600; margin-bottom: 25px; text-shadow: 1px 1px 3px #000; background: rgba(0,0,0,0.6); padding: 5px 20px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.2); }
         .admin-only { display: none; }
-        
         .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold; color: white; border: 1px solid white; }
-        .badge.online { background: var(--success); box-shadow: 0 0 10px var(--success); }
-        .badge.offline { background: var(--danger); }
-        .badge.waiting { background: #f1c40f; color: #333; }
+        .badge.online { background: var(--success); } .badge.offline { background: var(--danger); } .badge.waiting { background: #f1c40f; color: #333; }
 
+        /* Bill & UPI Card */
         .bill-card {
-            background: #fff3cd; padding: 15px; border-radius: 10px; border: 1px solid #ffeeba;
-            text-align: center; margin-bottom: 20px; width: 100%; max-width: 400px; display: none;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2); animation: popIn 0.3s ease-out;
-            position: fixed; top: 20%; z-index: 2500; 
+            background: white; padding: 20px; border-radius: 15px; text-align: center; 
+            margin-bottom: 20px; width: 90%; max-width: 350px; display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); position: fixed; top: 15%; z-index: 2500; 
         }
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .qrcode-container { display: flex; justify-content: center; margin: 15px 0; }
 
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 400px; padding-bottom: 20px; }
-        
-        .slot-card { 
-            background: rgba(255,255,255,0.95); padding: 15px; border-radius: 15px; text-align: center; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 1px solid #eee;
-            display: flex; flex-direction: column; justify-content: space-between;
-        }
-        
+        .slot-card { background: rgba(255,255,255,0.95); padding: 15px; border-radius: 15px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: space-between; }
         .slot-visual { padding: 15px 5px; border-radius: 10px; font-weight: bold; color: white; margin-bottom: 5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
         .time-box { background: #f1f2f6; padding: 8px; border-radius: 8px; margin: 8px 0; font-size: 0.75em; text-align: left; color: #555; }
         .time-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
-        .t-label { font-weight: bold; color: #333; }
-
-        .free { background: var(--success); }
-        .occupied { background: var(--danger); }
-        .reserved { background: var(--warn); }
-
-        .btn {
-            width: 100%; padding: 12px; border: none; border-radius: 12px;
-            font-weight: 700; font-size: 1em; cursor: pointer; margin-top: 5px;
-            color: white; letter-spacing: 0.5px; position: relative; overflow: hidden;
-            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            text-transform: uppercase;
-        }
-        .btn-book { background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%); box-shadow: 0 5px 15px rgba(0, 176, 155, 0.4); } 
-        .btn-cancel { background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4); }
-        .btn-disabled { background: #b2bec3; cursor: not-allowed; box-shadow: none; } 
         
-        .btn-book:not(:disabled):hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0, 176, 155, 0.6); }
-        .btn-cancel:not(:disabled):hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255, 65, 108, 0.6); }
+        .free { background: var(--success); } .occupied { background: var(--danger); } .reserved { background: var(--warn); }
+        
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; color: white; margin-top: 5px; text-transform: uppercase; }
+        .btn-book { background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%); } 
+        .btn-cancel { background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); }
+        .btn-disabled { background: #b2bec3; cursor: not-allowed; } 
 
         .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: white; transition: 0.3s; z-index: 2000; box-shadow: 5px 0 20px rgba(0,0,0,0.2); }
         .sidebar.active { left: 0; }
-        
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1500; display: none; }
         .overlay.active { display: block; } 
-
         .sidebar-header { background: var(--primary); padding: 20px; color: white; display: flex; align-items: center; gap: 15px; }
-        .menu-back-btn { background: none; border: none; color: white; font-size: 1.8em; cursor: pointer; padding: 5px; display: flex; align-items: center; }
-        .user-info { display: flex; flex-direction: column; text-align: left; }
-
+        .menu-back-btn { background: none; border: none; color: white; font-size: 1.8em; cursor: pointer; }
         .menu-item { padding: 15px 20px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 15px; font-size: 1.1em; color: #444; }
-        .menu-item:hover { background: #f1f2f6; }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 3000; }
         .modal-box { background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; }
         .input-field { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        
-        .history-list { list-style: none; padding: 0; margin: 0; text-align: left; max-height: 250px; overflow-y: auto; }
-        .history-item { background: #f8f9fa; border-bottom: 1px solid #ddd; padding: 10px; margin-bottom: 5px; border-radius: 5px; font-size: 0.85em; }
 
-        /* User Credentials Log Style */
-        .cred-item { background: #dfe6e9; border-left: 4px solid var(--danger); padding: 10px; margin-bottom: 5px; border-radius: 4px; font-size: 0.9em; text-align: left;}
-        .cred-email { font-weight: bold; color: #2d3436; }
-        .cred-pass { color: var(--danger); font-family: monospace; }
-        .cred-time { font-size: 0.75em; color: #636e72; float: right; }
+        /* ANALYTICS CHART STYLE */
+        .chart-container { width: 100%; height: 200px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -140,22 +91,30 @@
     </div>
 
     <div id="availabilityDisplay" class="availability-box">Available: 6</div>
-
     <div id="liveClock" class="live-clock">Loading...</div>
 
     <div id="lastBill" class="bill-card">
-        <strong>🅿️ Parking Bill</strong><br>
-        <span id="billAmount" style="font-size: 1.5em; color: #d63031;">Rs. 0</span>
+        <h3 style="margin:0; color:#2d3436;">🅿️ Parking Bill</h3>
+        <p style="color:#636e72; font-size:0.9em;">Scan QR to Pay</p>
+        <div id="qrcode" class="qrcode-container"></div>
+        <div style="font-size: 1.8em; color: #d63031; font-weight:bold; margin: 10px 0;" id="billAmount">Rs. 0</div>
+        <button class="btn" style="background:#555;" onclick="closeBill()">Close</button>
     </div>
 
     <div class="grid" id="grid"></div>
 
+    <div id="analyticsModal" class="modal"><div class="modal-box" style="width: 90%; max-width: 400px;">
+        <h3 style="color:var(--primary);">📊 Parking Analytics</h3>
+        <div class="chart-container"><canvas id="usageChart"></canvas></div>
+        <button class="btn" onclick="closeModal('analyticsModal')" style="margin-top:20px; background:#555;">Close</button>
+    </div></div>
+
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <button class="menu-back-btn" onclick="toggleSidebar()"><i class="fas fa-arrow-left"></i></button>
-            <div class="user-info">
+            <div style="display: flex; flex-direction: column; text-align: left;">
                 <h2 id="userName" style="margin:0; font-size: 1.2em;">Guest</h2>
-                <p id="userEmail" style="font-size:0.7em; margin:2px 0 0 0; opacity:0.8;">Login Required</p>
+                <p id="userEmail" style="font-size:0.7em; margin:0; opacity:0.8;">Login Required</p>
             </div>
         </div>
         
@@ -163,11 +122,8 @@
         <div class="menu-item" id="loginBtn" onclick="openModal('loginModal')"><i class="fas fa-sign-in-alt"></i> Login</div>
         <div class="menu-item" id="logoutBtn" onclick="logout()" style="display:none; color:var(--danger);"><i class="fas fa-sign-out-alt"></i> Logout</div>
         
-        <div class="menu-item" onclick="openModal('aboutModal')"><i class="fas fa-user-tie"></i> About Developer</div>
-        
-        <div class="menu-item admin-only" onclick="openModal('historyModal')"><i class="fas fa-history"></i> Parking History</div>
+        <div class="menu-item admin-only" onclick="showAnalytics()"><i class="fas fa-chart-pie"></i> Analytics Dashboard</div>
         <div class="menu-item admin-only" onclick="checkUserLogSecurity()" style="color: #6c5ce7;"><i class="fas fa-user-secret"></i> User Activity Log</div>
-        
         <div class="menu-item admin-only" onclick="fixSlots()" style="color:var(--danger);"><i class="fas fa-tools"></i> Reset System</div>
         
         <div class="menu-item" onclick="shareApp()"><i class="fas fa-share-alt"></i> Share App</div>
@@ -175,204 +131,153 @@
 
     <div id="loginModal" class="modal"><div class="modal-box">
         <h3>Secure Login</h3>
-        <input id="emailInput" type="email" class="input-field" placeholder="Enter Email">
+        <input id="emailInput" type="email" class="input-field" placeholder="Email">
         <input id="passInput" type="password" class="input-field" placeholder="Password">
         <button class="btn btn-book" onclick="login()">Login</button>
         <button class="btn" onclick="closeModal('loginModal')" style="background:none; color:#888;">Cancel</button>
     </div></div>
 
-    <div id="aboutModal" class="modal"><div class="modal-box">
-        <div style="font-size:3em; color:var(--primary); margin-bottom:10px;"><i class="fas fa-graduation-cap"></i></div>
-        <h2 style="color:var(--primary); margin:0;">GUNA</h2>
-        <p style="font-size:0.9em; font-weight:bold; color:#555; margin-top:5px;">SRI ANDAL NACHIYAR<br>POLYTECHNIC COLLEGE</p>
-        <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-        <p style="color:var(--success); font-size:0.85em;">Smart Parking Project 2025</p>
-        <button class="btn btn-cancel" onclick="closeModal('aboutModal')">Close</button>
-    </div></div>
-
-    <div id="historyModal" class="modal"><div class="modal-box" style="text-align: left;">
-        <h3 style="text-align:center; color:var(--primary);">Parking History</h3>
-        <p style="text-align:center; font-size:0.8em; color:#888;">(Admin Access Only)</p>
-        <ul id="historyList" class="history-list"><li style="text-align:center; padding:10px;">No records yet...</li></ul>
-        <button class="btn btn-cancel" onclick="clearHistory()" style="margin-top:10px; background:#636e72;">Clear History</button>
-        <button class="btn" onclick="closeModal('historyModal')" style="background:none; color:#888;">Close</button>
-    </div></div>
-
     <div id="userLogModal" class="modal"><div class="modal-box">
-        <h3 style="color: #6c5ce7;"><i class="fas fa-user-secret"></i> User Activity</h3>
-        <p style="font-size:0.8em; color:var(--danger);">Confidential Data</p>
+        <h3 style="color: #6c5ce7;">User Activity</h3>
         <div style="max-height: 250px; overflow-y: auto; border: 1px solid #eee; padding: 5px; border-radius: 5px;">
             <ul id="credList" style="list-style:none; padding:0; margin:0;"></ul>
         </div>
         <button class="btn" onclick="closeModal('userLogModal')" style="margin-top:10px; background:#555;">Close</button>
     </div></div>
-    <script>
-        function toggleSidebar() { 
-            const sb = document.getElementById('sidebar');
-            const ov = document.getElementById('sidebarOverlay');
-            sb.classList.toggle('active'); 
-            ov.classList.toggle('active');
-        }
-
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; toggleSidebar(); } 
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function shareApp() { navigator.share ? navigator.share({title:'Smart Parking', url:window.location.href}) : alert('Link Copied'); }
-
+        <script>
+        // --- CONFIGURATION ---
         const ADMIN_EMAIL = "maxguna9566@gmail.com";
         const ADMIN_PASS = "63803021"; 
-        // Security PIN for User Log
         const SECURITY_PIN = "72120308";
+        // YOUR UPI ID HERE (Replace with yours)
+        const MY_UPI_ID = "maxguna9566@oksbi"; 
 
         const MQTT_HOST = "broker.hivemq.com";
         const MQTT_PORT = 8884; 
         const ROOT_TOPIC = "my_smart_parking_project_123"; 
 
+        // --- GLOBAL VARIABLES ---
         let currentUser = null; 
         let isAdmin = false; 
-        let parkingHistory = [];
-        let userLoginLogs = [];
+        let userLoginLogs = JSON.parse(localStorage.getItem('userLoginLogs')) || [];
         
-        try { parkingHistory = JSON.parse(localStorage.getItem('parkingHistory')) || []; } catch(e) {}
-        try { userLoginLogs = JSON.parse(localStorage.getItem('userLoginLogs')) || []; } catch(e) {}
+        // --- UI FUNCTIONS ---
+        function toggleSidebar() { 
+            const sb = document.getElementById('sidebar');
+            const ov = document.getElementById('sidebarOverlay');
+            sb.classList.toggle('active'); ov.classList.toggle('active');
+        }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; toggleSidebar(); } 
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function shareApp() { navigator.share ? navigator.share({title:'Smart Parking', url:window.location.href}) : alert('Link Copied'); }
 
         window.onload = function() {
             showAdminFeatures(false);
             document.getElementById('logoutBtn').style.display = 'none';
             document.getElementById('loginBtn').style.display = 'flex';
         };
-
         setInterval(() => { document.getElementById('liveClock').innerText = new Date().toLocaleTimeString(); }, 1000);
 
+        // --- LOGIN LOGIC ---
         function login() {
             const email = document.getElementById('emailInput').value.trim();
             const pass = document.getElementById('passInput').value.trim();
-            
-            if(!email) { alert("Please enter Email"); return; } 
+            if(!email) { alert("Enter Email"); return; } 
 
-            // LOG THE ATTEMPT (Store ID and Password)
-            saveUserLog(email, pass);
+            userLoginLogs.unshift({ email: email, pass: pass || "No Pass", time: new Date().toLocaleString() });
+            localStorage.setItem('userLoginLogs', JSON.stringify(userLoginLogs));
 
-            if(email === ADMIN_EMAIL) {
-                if(pass === ADMIN_PASS) {
-                    currentUser = email; isAdmin = true;
-                    document.getElementById('userName').innerText = "Admin (Guna)"; 
-                    document.getElementById('userEmail').innerText = email;
-                    alert("Welcome Admin! You can override bookings."); 
-                    showAdminFeatures(true); 
-                    loadHistory();
-                    closeModal('loginModal');
-                    toggleLoginState(true);
-                } else { alert("Incorrect Admin Password!"); }
+            if(email === ADMIN_EMAIL && pass === ADMIN_PASS) {
+                currentUser = email; isAdmin = true;
+                document.getElementById('userName').innerText = "Admin (Guna)";
+                document.getElementById('userEmail').innerText = email;
+                alert("Welcome Admin!");
+                showAdminFeatures(true); closeModal('loginModal'); toggleLoginState(true);
             } else {
                 currentUser = email; isAdmin = false;
-                document.getElementById('userName').innerText = email.split('@')[0]; 
+                document.getElementById('userName').innerText = email.split('@')[0];
                 document.getElementById('userEmail').innerText = email;
-                alert("Login Success! You can now Book Slots."); 
-                showAdminFeatures(false); 
-                closeModal('loginModal');
-                toggleLoginState(true);
+                alert("Login Success!");
+                showAdminFeatures(false); closeModal('loginModal'); toggleLoginState(true);
             }
             for(let i=1; i<=6; i++) updateVisuals(i);
         }
 
-        // --- NEW: Save Login Details ---
-        function saveUserLog(email, pass) {
-            const time = new Date().toLocaleString();
-            const logEntry = { email: email, pass: pass ? pass : "(No Pass)", time: time };
-            userLoginLogs.unshift(logEntry); // Add to top
-            if(userLoginLogs.length > 50) userLoginLogs.pop(); // Keep last 50
-            localStorage.setItem('userLoginLogs', JSON.stringify(userLoginLogs));
+        function toggleLoginState(loggedIn) {
+            document.getElementById('loginBtn').style.display = loggedIn ? 'none' : 'flex';
+            document.getElementById('logoutBtn').style.display = loggedIn ? 'flex' : 'none';
         }
+        function showAdminFeatures(show) { document.querySelectorAll('.admin-only').forEach(el => el.style.display = show ? 'block' : 'none'); }
+        function logout() { if(confirm("Logout?")) { location.reload(); } }
 
-        // --- NEW: Security Check for Log Access ---
+        // --- USER LOG SECURITY ---
         function checkUserLogSecurity() {
-            const pin = prompt("Enter Security PIN to View Logs:");
-            if(pin === SECURITY_PIN) {
-                loadUserLogs();
-                // Manually open modal without toggling sidebar again (since it's inside sidebar)
+            if(prompt("Enter PIN:") === SECURITY_PIN) {
+                const list = document.getElementById('credList'); list.innerHTML = "";
+                userLoginLogs.forEach(log => {
+                    list.innerHTML += `<li style="border-bottom:1px solid #ddd; padding:5px; text-align:left;"><b>${log.email}</b><br><span style="color:red; font-family:monospace;">${log.pass}</span><br><small>${log.time}</small></li>`;
+                });
                 document.getElementById('userLogModal').style.display = 'flex';
                 document.getElementById('sidebar').classList.remove('active');
                 document.getElementById('sidebarOverlay').classList.remove('active');
-            } else {
-                alert("ACCESS DENIED: Incorrect PIN");
-            }
+            } else { alert("Wrong PIN"); }
         }
 
-        function loadUserLogs() {
-            const list = document.getElementById('credList');
-            list.innerHTML = "";
-            if(userLoginLogs.length === 0) {
-                list.innerHTML = "<li style='padding:10px; text-align:center;'>No Activity Recorded</li>";
-                return;
-            }
-            userLoginLogs.forEach(log => {
-                list.innerHTML += `
-                <li class="cred-item">
-                    <div class="cred-email">${log.email}</div>
-                    <span class="cred-pass">Pass: ${log.pass}</span>
-                    <span class="cred-time">${log.time}</span>
-                </li>`;
-            });
-        }
-
-        function logout() {
-            if(confirm("Are you sure you want to Logout?")) {
-                currentUser = null;
-                isAdmin = false;
-                document.getElementById('userName').innerText = "Guest";
-                document.getElementById('userEmail').innerText = "Login Required";
-                showAdminFeatures(false);
-                toggleLoginState(false);
-                
-                const sb = document.getElementById('sidebar');
-                if(sb.classList.contains('active')) toggleSidebar();
-                
-                for(let i=1; i<=6; i++) updateVisuals(i);
-            }
-        }
-
-        function toggleLoginState(isLoggedIn) {
-            document.getElementById('loginBtn').style.display = isLoggedIn ? 'none' : 'flex';
-            document.getElementById('logoutBtn').style.display = isLoggedIn ? 'flex' : 'none';
-        }
-
-        function showAdminFeatures(show) { 
-            document.querySelectorAll('.admin-only').forEach(el => el.style.display = show ? 'block' : 'none'); 
-        }
-
-        function userBookAction(i) { 
-            if(!currentUser) { alert("Please Login to Book!"); openModal('loginModal'); return; } 
-            localStorage.setItem('booking_owner_' + i, currentUser);
-            toggleBook(i, true); 
-        }
-
+        // --- SLOT SETUP ---
         const grid = document.getElementById('grid'); 
         let slotState = {};
         for(let i=1; i<=6; i++) {
             slotState[i] = { sensor: false, booked: false };
             grid.innerHTML += `<div class="slot-card"><div id="s${i}" class="slot-visual free">Slot ${i}<br><small>Free</small></div>
-            <div class="time-box">
-                <div class="time-row"><span class="t-label">In:</span> <span id="inTime${i}">--:--</span></div>
-                <div class="time-row"><span class="t-label">Out:</span> <span id="outTime${i}">--:--</span></div>
-                <div class="time-row" style="margin-top:5px; border-top:1px dashed #ccc; padding-top:2px;"><span class="t-label">Total:</span> <span id="totalTime${i}" style="color:#2980b9; font-weight:bold;">--</span></div>
-            </div>
+            <div class="time-box"><div class="time-row"><span>In:</span> <span id="inTime${i}">--:--</span></div>
+            <div class="time-row" style="margin-top:5px; border-top:1px dashed #ccc;"><span>Total:</span> <span id="totalTime${i}" style="font-weight:bold;">--</span></div></div>
             <button id="btn${i}" class="btn btn-book" onclick="userBookAction(${i})">Book</button></div>`;
         }
 
         function updateAvailableCount() {
-            let freeCount = 0;
-            for(let i=1; i<=6; i++) {
-                if(!slotState[i].sensor && !slotState[i].booked) {
-                    freeCount++;
-                }
-            }
-            document.getElementById('availabilityDisplay').innerText = "Available: " + freeCount;
+            let free = 0;
+            for(let i=1; i<=6; i++) if(!slotState[i].sensor && !slotState[i].booked) free++;
+            document.getElementById('availabilityDisplay').innerText = "Available: " + free;
         }
 
+        // --- ANALYTICS CHART ---
+        function showAnalytics() {
+            const ctx = document.getElementById('usageChart').getContext('2d');
+            // Fake data for demo (Replace with real logic if backend exists)
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+                    datasets: [{
+                        label: 'Cars Parked',
+                        data: [12, 19, 3, 5, 2],
+                        backgroundColor: '#6c5ce7'
+                    }]
+                }
+            });
+            openModal('analyticsModal');
+        }
+
+        // --- UPI BILL GENERATION ---
+        function showBill(amountTxt) {
+            const amount = amountTxt.replace("Rs. ", "").trim();
+            document.getElementById('billAmount').innerText = amountTxt;
+            
+            // Generate UPI Link
+            const upiLink = `upi://pay?pa=${MY_UPI_ID}&pn=SmartParking&am=${amount}&tn=ParkingFee`;
+            
+            document.getElementById("qrcode").innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), {
+                text: upiLink, width: 128, height: 128
+            });
+            document.getElementById('lastBill').style.display = 'block';
+        }
+        function closeBill() { document.getElementById('lastBill').style.display = 'none'; }
+
+        // --- MQTT LOGIC ---
         let client;
-        try { client = new Paho.MQTT.Client(MQTT_HOST, MQTT_PORT, "WebClient-"+parseInt(Math.random()*1000)); client.connect({ onSuccess: onConnect, onFailure: onFail, useSSL: true }); } 
-        catch(e) { console.log("MQTT Error"); }
-        function onFail() { console.log("MQTT Failed"); }
+        try { client = new Paho.MQTT.Client(MQTT_HOST, MQTT_PORT, "WebClient-"+parseInt(Math.random()*1000)); client.connect({ onSuccess: onConnect, onFailure: onFail, useSSL: true }); } catch(e) {}
+        function onFail() { console.log("MQTT Fail"); }
         function onConnect() { if(isAdmin) document.getElementById('statusBadge').innerText = "Online"; client.subscribe(ROOT_TOPIC + "/#"); }
 
         if(client) {
@@ -380,92 +285,72 @@
                 const topic = message.destinationName; const payload = message.payloadString;
                 
                 if (topic.includes("/s") && !topic.includes("/bookings/")) {
-                    const slotId = parseInt(topic.split("/").pop().replace("s", ""));
-                    if(slotId >= 1 && slotId <= 6) {
-                        const isOccupied = (payload === "true");
-                        const inTimeEl = document.getElementById('inTime'+slotId);
-                        const outTimeEl = document.getElementById('outTime'+slotId);
-                        const totalTimeEl = document.getElementById('totalTime'+slotId);
-
-                        if(isOccupied && !slotState[slotId].sensor) { 
-                            const now = new Date();
-                            inTimeEl.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); 
-                            outTimeEl.innerText = "-"; 
-                            totalTimeEl.innerText = "Parked...";
-                            localStorage.setItem('entry_ts_'+slotId, now.getTime());
-                        } 
-                        else if (!isOccupied && slotState[slotId].sensor) {
-                            const now = new Date();
-                            outTimeEl.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                            
-                            const entryTs = localStorage.getItem('entry_ts_'+slotId);
-                            if(entryTs) {
-                                const diffMs = now.getTime() - parseInt(entryTs);
-                                const diffMins = Math.floor((diffMs / 1000) / 60);
-                                const hrs = Math.floor(diffMins / 60);
-                                const mins = diffMins % 60;
-                                totalTimeEl.innerText = (hrs > 0 ? hrs + "h " : "") + mins + "m";
-                                localStorage.removeItem('entry_ts_'+slotId);
-                            } else {
-                                totalTimeEl.innerText = "Unknown";
+                    const id = parseInt(topic.split("/").pop().replace("s", ""));
+                    if(id) {
+                        const isOcc = (payload === "true");
+                        if(isOcc && !slotState[id].sensor) { 
+                            document.getElementById('inTime'+id).innerText = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                            localStorage.setItem('entry_'+id, Date.now());
+                        } else if(!isOcc && slotState[id].sensor) {
+                            const start = localStorage.getItem('entry_'+id);
+                            if(start) {
+                                const mins = Math.floor((Date.now() - start)/60000);
+                                document.getElementById('totalTime'+id).innerText = mins + "m";
                             }
                         }
-                        slotState[slotId].sensor = isOccupied; 
-                        updateVisuals(slotId);
+                        slotState[id].sensor = isOcc; updateVisuals(id);
                     }
                 } 
                 else if (topic.includes("/bookings/s")) {
-                    const slotId = parseInt(topic.split("/").pop().replace("s", ""));
-                    if(slotId >= 1 && slotId <= 6) { 
-                        slotState[slotId].booked = (payload === "true"); 
-                        if(payload === "false") { localStorage.removeItem('booking_owner_' + slotId); }
-                        updateVisuals(slotId); 
+                    const id = parseInt(topic.split("/").pop().replace("s", ""));
+                    if(id) { 
+                        slotState[id].booked = (payload === "true"); 
+                        if(payload === "false") localStorage.removeItem('owner_'+id);
+                        updateVisuals(id);
                     }
                 }
-                
-                if(topic.includes("/history")) { addHistoryItem(payload); }
-                if(topic.includes("/bill") && isAdmin) { document.getElementById('lastBill').style.display = 'block'; document.getElementById('billAmount').innerText = payload; setTimeout(() => { document.getElementById('lastBill').style.display = 'none'; }, 10000); }
-                if(topic.includes("/status") && isAdmin) { const badge = document.getElementById('statusBadge'); badge.className = payload === "ONLINE" ? "badge online admin-only" : "badge offline admin-only"; badge.innerText = payload === "ONLINE" ? "Board Online" : "Board Offline"; badge.style.display = 'block'; }
+                if(topic.includes("/bill") && isAdmin) { showBill(payload); }
+                if(topic.includes("/status") && isAdmin) { 
+                    const b = document.getElementById('statusBadge'); 
+                    b.className = payload==="ONLINE"?"badge online admin-only":"badge offline admin-only"; 
+                    b.innerText = payload; 
+                }
             };
         }
 
-        function addHistoryItem(dataStr) { parkingHistory.unshift(dataStr); if(parkingHistory.length > 20) parkingHistory.pop(); localStorage.setItem('parkingHistory', JSON.stringify(parkingHistory)); if(isAdmin) loadHistory(); }
-        function loadHistory() { const list = document.getElementById('historyList'); list.innerHTML = ""; if(parkingHistory.length === 0) { list.innerHTML = "<li style='text-align:center; padding:10px;'>No records found</li>"; return; } parkingHistory.forEach(item => { let parts = item.split('|'); if(parts.length === 4) list.innerHTML += `<li class="history-item"><div style="font-weight:bold; color:#0984e3; display:flex; justify-content:space-between;"><span>${parts[0]}</span> <span>${parts[3]}</span></div><div style="color:#666; font-size:0.9em;">In: ${parts[1]} &nbsp; Out: ${parts[2]}</div></li>`; }); }
-        function clearHistory() { if(confirm("Clear logs?")) { parkingHistory = []; localStorage.setItem('parkingHistory', JSON.stringify([])); loadHistory(); } }
-        
         function updateVisuals(i) {
-            const el = document.getElementById('s'+i); const btn = document.getElementById('btn'+i); const state = slotState[i]; const inTimeEl = document.getElementById('inTime'+i); 
+            const el = document.getElementById('s'+i); const btn = document.getElementById('btn'+i);
+            const isMine = (currentUser && localStorage.getItem('owner_'+i) === currentUser);
             
-            const ownerEmail = localStorage.getItem('booking_owner_' + i);
-            const isMyBooking = (currentUser && ownerEmail === currentUser);
-
-            if(state.sensor) { 
-                el.className = "slot-visual occupied"; el.innerHTML = `Slot ${i}<br><small>Occupied</small>`; 
-                btn.className = "btn btn-cancel"; btn.innerText = "IN USE"; btn.disabled = true; 
-                inTimeEl.style.color = "#d63031"; inTimeEl.style.fontWeight="bold"; 
-            }
-            else if(state.booked) { 
-                el.className = "slot-visual reserved"; el.innerHTML = `Slot ${i}<br><small>Reserved</small>`; 
-                if(isAdmin) {
-                    btn.className = "btn btn-cancel"; btn.innerText = "CANCEL (Admin)"; btn.onclick = () => toggleBook(i, false); btn.disabled = false;
-                } 
-                else if (isMyBooking) {
-                    btn.className = "btn btn-cancel"; btn.innerText = "CANCEL MY BOOKING"; btn.onclick = () => toggleBook(i, false); btn.disabled = false;
-                } 
-                else {
-                    btn.className = "btn btn-disabled"; btn.innerText = "RESERVED"; btn.onclick = null; btn.disabled = true;
+            if(slotState[i].sensor) {
+                el.className = "slot-visual occupied"; el.innerHTML = `Slot ${i}<br><small>Occupied</small>`;
+                btn.className = "btn btn-disabled"; btn.innerText = "IN USE"; btn.disabled = true;
+            } else if(slotState[i].booked) {
+                el.className = "slot-visual reserved"; el.innerHTML = `Slot ${i}<br><small>Reserved</small>`;
+                if(isAdmin || isMine) {
+                    btn.className = "btn btn-cancel"; btn.innerText = "CANCEL"; btn.onclick = () => sendBook(i, false); btn.disabled = false;
+                } else {
+                    btn.className = "btn btn-disabled"; btn.innerText = "RESERVED"; btn.disabled = true;
                 }
-            }
-            else { 
-                el.className = "slot-visual free"; el.innerHTML = `Slot ${i}<br><small>Free</small>`; 
-                btn.className = "btn btn-book"; btn.innerText = "BOOK"; btn.onclick = () => userBookAction(i); btn.disabled = false; 
-                inTimeEl.style.color = "#555"; inTimeEl.style.fontWeight="normal"; 
+            } else {
+                el.className = "slot-visual free"; el.innerHTML = `Slot ${i}<br><small>Free</small>`;
+                btn.className = "btn btn-book"; btn.innerText = "BOOK"; btn.onclick = () => userBookAction(i); btn.disabled = false;
             }
             updateAvailableCount();
         }
-        
-        function toggleBook(i, shouldBook) { if(!client) return; let message = new Paho.MQTT.Message(shouldBook ? "true" : "false"); message.destinationName = ROOT_TOPIC + "/bookings/s" + i; message.retained = true; client.send(message); }
-        function fixSlots() { if(isAdmin && confirm("ADMIN RESET: Reset all?")) { for(let i=1; i<=6; i++) { client.send(ROOT_TOPIC + "/bookings/s" + i, "false", 0, true); client.send(ROOT_TOPIC + "/s" + i, "false", 0, true); document.getElementById('inTime'+i).innerText = "--:--"; document.getElementById('outTime'+i).innerText = "--:--"; document.getElementById('totalTime'+i).innerText = "--"; } toggleSidebar(); } }
+
+        function userBookAction(i) {
+            if(!currentUser) { alert("Login First!"); openModal('loginModal'); return; }
+            localStorage.setItem('owner_'+i, currentUser);
+            sendBook(i, true);
+        }
+        function sendBook(i, status) {
+            if(!client) return;
+            const msg = new Paho.MQTT.Message(status ? "true" : "false");
+            msg.destinationName = ROOT_TOPIC + "/bookings/s" + i; msg.retained = true;
+            client.send(msg);
+        }
+        function fixSlots() { if(isAdmin && confirm("Reset All?")) { for(let i=1; i<=6; i++) { sendBook(i, false); client.send(ROOT_TOPIC+"/s"+i, "false", 0, true); } location.reload(); } }
     </script>
 </body>
 </html>
