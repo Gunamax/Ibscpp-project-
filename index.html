@@ -17,14 +17,9 @@
         body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url('https://images.unsplash.com/photo-1506521781263-d8422e82f27a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'); background-size: cover; background-position: center; z-index: -1; }
         
         .header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .menu-btn { font-size: 32px; border: none; background: none; cursor: pointer; color: #fff; filter: drop-shadow(2px 2px 2px #000); padding: 10px; }
+        .menu-btn { font-size: 32px; border: none; background: none; cursor: pointer; color: #fff; filter: drop-shadow(2px 2px 2px #000); padding: 10px; position: relative; }
         .app-title { font-weight: 700; font-size: 1.8em; color: #fff; text-shadow: 2px 2px 4px #000; letter-spacing: 1px; margin: 0;}
         
-        /* PAYMENT POPUP STYLE */
-        .payment-alert { display: none; background: #fff; border: 2px solid var(--danger); padding: 20px; border-radius: 15px; text-align: center; position: fixed; top: 10%; z-index: 3500; width: 90%; max-width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .admin-controls { display: none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
-        .qr-image { width: 220px; height: auto; object-fit: contain; border: 1px solid #ddd; border-radius: 10px; margin: 10px 0; }
-
         .availability-box { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: #fff; padding: 15px 30px; border-radius: 50px; font-weight: 700; font-size: 1.3em; margin-bottom: 20px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4); text-align: center; backdrop-filter: blur(5px); animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         
@@ -52,48 +47,38 @@
         .overlay.active { display: block; } 
         .sidebar-header { background: var(--primary); padding: 20px; color: white; display: flex; align-items: center; gap: 15px; }
         .menu-back-btn { background: none; border: none; color: white; font-size: 1.8em; cursor: pointer; }
-        .menu-item { padding: 15px 20px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 15px; font-size: 1.1em; color: #444; }
+        .menu-item { padding: 15px 20px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 15px; font-size: 1.1em; color: #444; position: relative; }
         
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 3000; }
         .modal-box { background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; }
         .input-field { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
         .chart-container { width: 100%; height: 200px; margin-top: 10px; }
+        
+        .qr-image { width: 220px; height: auto; object-fit: contain; border: 1px solid #ddd; border-radius: 10px; margin: 10px 0; }
+        .notif-dot { width: 12px; height: 12px; background: red; border-radius: 50%; display: none; margin-left: auto; box-shadow: 0 0 5px rgba(255,0,0,0.5); }
+        .menu-badge { width: 12px; height: 12px; background: red; border-radius: 50%; position: absolute; top: 5px; right: 5px; border: 2px solid #fff; display: none; }
+        
+        /* SUCCESS ANIMATION STYLE */
+        .success-checkmark { display: none; color: #00b894; animation: popIn 0.5s ease; }
+        @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
     <div id="sidebarOverlay" class="overlay" onclick="toggleSidebar()"></div>
+    
     <div class="header">
-        <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <button class="menu-btn" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+            <span id="menuNotif" class="menu-badge"></span> 
+        </button>
         <div class="app-title">Smart Parking</div>
         <div id="statusBadge" class="badge waiting admin-only">Waiting...</div>
-    </div>
-
-    <div id="paymentPopup" class="payment-alert">
-        <h2>⚠️ Payment Required</h2>
-        <p>Exit Gate is Closed.</p>
-        
-        <img src="my_qr.png" alt="Scan to Pay" class="qr-image" onerror="this.style.display='none'; alert('QR Image not found! Add my_qr.png');">
-        
-        <h1 id="popupAmount" style="color:#2d3436; margin:5px 0;">Rs. 40</h1>
-        <p style="font-size:0.8em; color:#555;">Scan QR & Show Admin</p>
-
-        <div id="adminApproveBox" class="admin-controls">
-            <p style="color:red; font-weight:bold;">Admin Action:</p>
-            <button class="btn btn-pay" onclick="approveExit()">✅ Payment Received - Open Gate</button>
-        </div>
-        <button class="btn" style="background:#b2bec3; margin-top:10px;" onclick="closePaymentPopup()">Hide</button>
     </div>
 
     <div id="availabilityDisplay" class="availability-box">Available: 6</div>
     <div id="liveClock" class="live-clock">Loading...</div>
 
     <div class="grid" id="grid"></div>
-
-    <div id="analyticsModal" class="modal"><div class="modal-box" style="width: 90%; max-width: 400px;">
-        <h3 style="color:var(--primary);">📊 Parking Analytics</h3>
-        <div class="chart-container"><canvas id="usageChart"></canvas></div>
-        <button class="btn" onclick="closeModal('analyticsModal')" style="margin-top:20px; background:#555;">Close</button>
-    </div></div>
 
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -105,6 +90,12 @@
         </div>
         <div class="menu-item" onclick="location.reload()"><i class="fas fa-sync-alt"></i> Refresh Page</div>
         <div class="menu-item" id="loginBtn" onclick="openModal('loginModal')"><i class="fas fa-sign-in-alt"></i> Login</div>
+        
+        <div class="menu-item admin-only" onclick="openPaymentClearance()">
+            <i class="fas fa-money-bill-wave"></i> Payment Clearance 
+            <span id="clearanceNotif" class="notif-dot"></span> 
+        </div>
+
         <div class="menu-item" id="logoutBtn" onclick="logout()" style="display:none; color:var(--danger);"><i class="fas fa-sign-out-alt"></i> Logout</div>
         <div class="menu-item" onclick="openModal('aboutModal')"><i class="fas fa-user-tie"></i> About Developer</div>
         <div class="menu-item admin-only" onclick="showAnalytics()"><i class="fas fa-chart-pie"></i> Analytics Dashboard</div>
@@ -118,6 +109,51 @@
         <input id="passInput" type="password" class="input-field" placeholder="Password">
         <button class="btn btn-book" onclick="login()">Login</button>
         <button class="btn" onclick="closeModal('loginModal')" style="background:none; color:#888;">Cancel</button>
+    </div></div>
+
+    <div id="clearanceModal" class="modal"><div class="modal-box">
+        <h3 id="modalTitle">💰 Parking Exit</h3>
+        
+        <div id="noPendingMsg" style="padding:20px; color:#555;">
+            <i class="fas fa-check-circle" style="font-size:3em; color:#ddd;"></i><br><br>
+            No Vehicles Waiting.
+        </div>
+        
+        <div id="pendingContent" style="display:none;">
+            
+            <div id="paymentView">
+                <p style="color:var(--danger); font-weight:bold; background:#ffecec; padding:5px; border-radius:5px;">⚠️ Exit Gate Closed</p>
+                <p>Vehicle Waiting at Exit</p>
+                
+                <img src="https://raw.githubusercontent.com/Gunamax/lbscp/main/my_qr.png" 
+                     alt="QR Code" class="qr-image" 
+                     onerror="this.style.display='none'; alert('QR Image Loading Error...');">
+                
+                <h1 id="clearanceAmount" style="color:#2d3436; margin:5px 0;">Rs. 40</h1>
+                
+                <div id="adminApproveBtn" style="display:none;">
+                    <p style="font-size:0.8em; color:#555;">Admin: Verify & Open</p>
+                    <button class="btn btn-pay" onclick="triggerGateOpen()">✅ Approve Gate</button>
+                </div>
+                
+                <div id="customerPayBtn" style="display:none;">
+                    <p style="font-size:0.8em; color:#555;">Scan QR to Pay</p>
+                    <button class="btn" onclick="customerPaidAction()" 
+                            style="background: #27ae60; margin-top:10px;">
+                        Payment Done
+                    </button>
+                </div>
+            </div>
+
+            <div id="thankYouView" class="success-checkmark">
+                <i class="fas fa-check-circle" style="font-size: 4em; margin: 20px 0;"></i>
+                <h2 style="color:#00b894;">Thank You!</h2>
+                <h3 style="color:#2d3436;">Welcome Again</h3>
+                <p>Gate Opening...</p>
+            </div>
+        </div>
+        
+        <button class="btn" onclick="closeModal('clearanceModal')" style="background:#555; margin-top:10px;">Close</button>
     </div></div>
 
     <div id="aboutModal" class="modal"><div class="modal-box">
@@ -137,47 +173,98 @@
         <button class="btn" onclick="closeModal('userLogModal')" style="margin-top:10px; background:#555;">Close</button>
     </div></div>
     
+    <div id="analyticsModal" class="modal"><div class="modal-box" style="width: 90%; max-width: 400px;">
+        <h3 style="color:var(--primary);">📊 Parking Analytics</h3>
+        <div class="chart-container"><canvas id="usageChart"></canvas></div>
+        <button class="btn" onclick="closeModal('analyticsModal')" style="margin-top:20px; background:#555;">Close</button>
+    </div></div>
+
     <script>
         const ADMIN_EMAIL = "maxguna9566@gmail.com";
         const ADMIN_PASS = "63803021"; 
         const SECURITY_PIN = "72120308";
-        const MY_UPI_ID = "maxguna9566-3@okicici"; 
         const MQTT_HOST = "broker.hivemq.com";
         const MQTT_PORT = 8884; 
         const ROOT_TOPIC = "my_smart_parking_project_123"; 
 
         let currentUser = null; 
         let isAdmin = false; 
+        let exitRequestPending = false; 
+        let currentBillAmount = "Rs. 0";
         let userLoginLogs = JSON.parse(localStorage.getItem('userLoginLogs')) || [];
         
         function toggleSidebar() { 
-            const sb = document.getElementById('sidebar');
-            const ov = document.getElementById('sidebarOverlay');
-            sb.classList.toggle('active'); ov.classList.toggle('active');
+            document.getElementById('sidebar').classList.toggle('active'); 
+            document.getElementById('sidebarOverlay').classList.toggle('active');
         }
         function openModal(id) { document.getElementById(id).style.display = 'flex'; toggleSidebar(); } 
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function shareApp() { navigator.share ? navigator.share({title:'Smart Parking', url:window.location.href}) : alert('Link Copied'); }
 
-        // --- Payment Popup Functions ---
-        function showPaymentPopup(amount) {
-            document.getElementById('popupAmount').innerText = amount;
-            document.getElementById('paymentPopup').style.display = 'block';
-            if(isAdmin) {
-                document.getElementById('adminApproveBox').style.display = 'block';
+        // --- PAYMENT & EXIT LOGIC ---
+        function openPaymentClearance() {
+            openModal('clearanceModal');
+            
+            // Reset Views
+            document.getElementById('paymentView').style.display = 'block';
+            document.getElementById('thankYouView').style.display = 'none';
+
+            if(exitRequestPending) {
+                document.getElementById('noPendingMsg').style.display = 'none';
+                document.getElementById('pendingContent').style.display = 'block';
+                document.getElementById('clearanceAmount').innerText = currentBillAmount;
+                
+                if(isAdmin) {
+                    // Admin View
+                    document.getElementById('adminApproveBtn').style.display = 'block';
+                    document.getElementById('customerPayBtn').style.display = 'none';
+                } else {
+                    // Customer View
+                    document.getElementById('adminApproveBtn').style.display = 'none';
+                    document.getElementById('customerPayBtn').style.display = 'block';
+                }
             } else {
-                document.getElementById('adminApproveBox').style.display = 'none';
+                document.getElementById('noPendingMsg').style.display = 'block';
+                document.getElementById('pendingContent').style.display = 'none';
             }
         }
-        function closePaymentPopup() { document.getElementById('paymentPopup').style.display = 'none'; }
-        
-        function approveExit() {
-            if(!isAdmin) return;
+
+        // 1. Admin Clicks Approve
+        function triggerGateOpen() {
             const msg = new Paho.MQTT.Message("true");
             msg.destinationName = ROOT_TOPIC + "/admin/open";
             client.send(msg);
             alert("Gate Opening...");
-            closePaymentPopup();
+            finalizeExit();
+        }
+
+        // 2. Customer Clicks "Payment Done" -> Shows Thank You -> Opens Gate
+        function customerPaidAction() {
+            // Show Thank You Animation
+            document.getElementById('paymentView').style.display = 'none';
+            document.getElementById('thankYouView').style.display = 'block';
+            
+            // Send Open Command (Simulating Auto Open)
+            const msg = new Paho.MQTT.Message("true");
+            msg.destinationName = ROOT_TOPIC + "/admin/open";
+            client.send(msg);
+
+            // Close after 3 seconds
+            setTimeout(() => {
+                finalizeExit();
+            }, 3000);
+        }
+
+        function finalizeExit() {
+            exitRequestPending = false;
+            updateNotification();
+            closeModal('clearanceModal');
+        }
+
+        function updateNotification() {
+            const display = exitRequestPending && isAdmin ? 'block' : 'none';
+            document.getElementById('clearanceNotif').style.display = display;
+            document.getElementById('menuNotif').style.display = display;
         }
 
         window.onload = function() {
@@ -199,6 +286,7 @@
                 document.getElementById('userName').innerText = "Admin (Guna)";
                 document.getElementById('userEmail').innerText = email;
                 alert("Welcome Admin!"); showAdminFeatures(true); closeModal('loginModal'); toggleLoginState(true);
+                updateNotification(); 
             } else {
                 currentUser = email; isAdmin = false;
                 document.getElementById('userName').innerText = email.split('@')[0];
@@ -289,8 +377,16 @@
                         updateVisuals(id);
                     }
                 }
-                if(topic.includes("/bill")) { showPaymentPopup(payload); }
-                if(topic.includes("/exit_request")) { showPaymentPopup("Rs. 40 (Check Bill)"); }
+                
+                // --- Payment Request Logic ---
+                if(topic.includes("/bill")) { currentBillAmount = payload; }
+                if(topic.includes("/exit_request") && payload === "WAITING_PAYMENT") { 
+                    exitRequestPending = true;
+                    updateNotification();
+                    
+                    // SHOW POPUP FOR EVERYONE
+                    openPaymentClearance();
+                }
                 
                 if(topic.includes("/status") && isAdmin) { 
                     const b = document.getElementById('statusBadge'); 
