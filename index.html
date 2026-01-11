@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Parking Pro</title>
-    <link rel="manifest" href="manifest.json">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -14,56 +13,39 @@
 
     <style>
         :root { --primary: #0984e3; --success: #00b894; --danger: #d63031; --warn: #e17055; --text: #2d3436; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; padding: 50px 20px 20px 20px; color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
+        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url('https://images.unsplash.com/photo-1506521781263-d8422e82f27a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'); background-size: cover; background-position: center; z-index: -1; }
         
-        body { 
-            font-family: 'Poppins', sans-serif; margin: 0; padding: 50px 20px 20px 20px; 
-            color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; 
-        }
-        
-        body::before {
-            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url('https://images.unsplash.com/photo-1506521781263-d8422e82f27a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
-            background-size: cover; background-position: center; z-index: -1;
-        }
-
         .header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .menu-btn { font-size: 32px; border: none; background: none; cursor: pointer; color: #fff; filter: drop-shadow(2px 2px 2px #000); padding: 10px; }
         .app-title { font-weight: 700; font-size: 1.8em; color: #fff; text-shadow: 2px 2px 4px #000; letter-spacing: 1px; margin: 0;}
         
-        .availability-box {
-            background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: #fff;
-            padding: 15px 30px; border-radius: 50px; font-weight: 700; font-size: 1.3em; margin-bottom: 20px;
-            border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
-            text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); backdrop-filter: blur(5px);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        /* --- NEW: PAYMENT POPUP STYLE --- */
+        .payment-alert { display: none; background: #fff; border: 2px solid var(--danger); padding: 20px; border-radius: 15px; text-align: center; position: fixed; top: 10%; z-index: 3500; width: 90%; max-width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .admin-controls { display: none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
+        .qr-image { width: 220px; height: auto; object-fit: contain; border: 1px solid #ddd; border-radius: 10px; margin: 10px 0; }
 
+        .availability-box { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: #fff; padding: 15px 30px; border-radius: 50px; font-weight: 700; font-size: 1.3em; margin-bottom: 20px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4); text-align: center; backdrop-filter: blur(5px); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        
         .live-clock { color: #fff; font-size: 1.1em; font-weight: 600; margin-bottom: 25px; text-shadow: 1px 1px 3px #000; background: rgba(0,0,0,0.6); padding: 5px 20px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.2); }
         .admin-only { display: none; }
         .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold; color: white; border: 1px solid white; }
-        .badge.online { background: var(--success); } .badge.offline { background: var(--danger); } .badge.waiting { background: #f1c40f; color: #333; }
-
-        .bill-card {
-            background: white; padding: 20px; border-radius: 15px; text-align: center; 
-            margin-bottom: 20px; width: 90%; max-width: 350px; display: none;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3); position: fixed; top: 15%; z-index: 2500; 
-        }
-        .qrcode-container { display: flex; justify-content: center; margin: 15px 0; }
-
+        .badge.online { background: var(--success); } .badge.offline { background: var(--danger); }
+        
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 400px; padding-bottom: 20px; }
         .slot-card { background: rgba(255,255,255,0.95); padding: 15px; border-radius: 15px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: space-between; }
         .slot-visual { padding: 15px 5px; border-radius: 10px; font-weight: bold; color: white; margin-bottom: 5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
         .time-box { background: #f1f2f6; padding: 8px; border-radius: 8px; margin: 8px 0; font-size: 0.75em; text-align: left; color: #555; }
         .time-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
-        
         .free { background: var(--success); } .occupied { background: var(--danger); } .reserved { background: var(--warn); }
         
         .btn { width: 100%; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; color: white; margin-top: 5px; text-transform: uppercase; }
         .btn-book { background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%); } 
+        .btn-pay { background: #0984e3; }
         .btn-cancel { background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); }
         .btn-disabled { background: #b2bec3; cursor: not-allowed; } 
-
+        
         .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: white; transition: 0.3s; z-index: 2000; box-shadow: 5px 0 20px rgba(0,0,0,0.2); }
         .sidebar.active { left: 0; }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1500; display: none; }
@@ -71,33 +53,39 @@
         .sidebar-header { background: var(--primary); padding: 20px; color: white; display: flex; align-items: center; gap: 15px; }
         .menu-back-btn { background: none; border: none; color: white; font-size: 1.8em; cursor: pointer; }
         .menu-item { padding: 15px 20px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 15px; font-size: 1.1em; color: #444; }
-
+        
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 3000; }
         .modal-box { background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; }
         .input-field { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-
         .chart-container { width: 100%; height: 200px; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div id="sidebarOverlay" class="overlay" onclick="toggleSidebar()"></div>
-
     <div class="header">
         <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
         <div class="app-title">Smart Parking</div>
         <div id="statusBadge" class="badge waiting admin-only">Waiting...</div>
     </div>
 
+    <div id="paymentPopup" class="payment-alert">
+        <h2>⚠️ Payment Required</h2>
+        <p>Exit Gate is Closed.</p>
+        
+        <img src="my_qr.png" alt="Scan to Pay" class="qr-image" onerror="this.style.display='none'; alert('QR Image not found! Add my_qr.png');">
+        
+        <h1 id="popupAmount" style="color:#2d3436; margin:5px 0;">Rs. 40</h1>
+        <p style="font-size:0.8em; color:#555;">Scan QR & Show Admin</p>
+
+        <div id="adminApproveBox" class="admin-controls">
+            <p style="color:red; font-weight:bold;">Admin Action:</p>
+            <button class="btn btn-pay" onclick="approveExit()">✅ Payment Received - Open Gate</button>
+        </div>
+        <button class="btn" style="background:#b2bec3; margin-top:10px;" onclick="closePaymentPopup()">Hide</button>
+    </div>
+
     <div id="availabilityDisplay" class="availability-box">Available: 6</div>
     <div id="liveClock" class="live-clock">Loading...</div>
-
-    <div id="lastBill" class="bill-card">
-        <h3 style="margin:0; color:#2d3436;">🅿️ Parking Bill</h3>
-        <p style="color:#636e72; font-size:0.9em;">Scan QR to Pay</p>
-        <div id="qrcode" class="qrcode-container"></div>
-        <div style="font-size: 1.8em; color: #d63031; font-weight:bold; margin: 10px 0;" id="billAmount">Rs. 0</div>
-        <button class="btn" style="background:#555;" onclick="closeBill()">Close</button>
-    </div>
 
     <div class="grid" id="grid"></div>
 
@@ -115,21 +103,16 @@
                 <p id="userEmail" style="font-size:0.7em; margin:0; opacity:0.8;">Login Required</p>
             </div>
         </div>
-        
         <div class="menu-item" onclick="location.reload()"><i class="fas fa-sync-alt"></i> Refresh Page</div>
         <div class="menu-item" id="loginBtn" onclick="openModal('loginModal')"><i class="fas fa-sign-in-alt"></i> Login</div>
         <div class="menu-item" id="logoutBtn" onclick="logout()" style="display:none; color:var(--danger);"><i class="fas fa-sign-out-alt"></i> Logout</div>
-        
         <div class="menu-item" onclick="openModal('aboutModal')"><i class="fas fa-user-tie"></i> About Developer</div>
-        
         <div class="menu-item admin-only" onclick="showAnalytics()"><i class="fas fa-chart-pie"></i> Analytics Dashboard</div>
         <div class="menu-item admin-only" onclick="checkUserLogSecurity()" style="color: #6c5ce7;"><i class="fas fa-user-secret"></i> User Activity Log</div>
         <div class="menu-item admin-only" onclick="fixSlots()" style="color:var(--danger);"><i class="fas fa-tools"></i> Reset System</div>
-        
         <div class="menu-item" onclick="shareApp()"><i class="fas fa-share-alt"></i> Share App</div>
     </div>
-
-    <div id="loginModal" class="modal"><div class="modal-box">
+        <div id="loginModal" class="modal"><div class="modal-box">
         <h3>Secure Login</h3>
         <input id="emailInput" type="email" class="input-field" placeholder="Email">
         <input id="passInput" type="password" class="input-field" placeholder="Password">
@@ -153,24 +136,21 @@
         </div>
         <button class="btn" onclick="closeModal('userLogModal')" style="margin-top:10px; background:#555;">Close</button>
     </div></div>
+    
     <script>
-        // --- CONFIGURATION ---
         const ADMIN_EMAIL = "maxguna9566@gmail.com";
         const ADMIN_PASS = "63803021"; 
         const SECURITY_PIN = "72120308";
-        // YOUR UPI ID
-        const MY_UPI_ID = "maxguna9566@oksbi"; 
-
+        // உங்கள் புது QR Code-ல் உள்ள UPI ID
+        const MY_UPI_ID = "maxguna9566-3@okicici"; 
         const MQTT_HOST = "broker.hivemq.com";
         const MQTT_PORT = 8884; 
         const ROOT_TOPIC = "my_smart_parking_project_123"; 
 
-        // --- GLOBAL VARIABLES ---
         let currentUser = null; 
         let isAdmin = false; 
         let userLoginLogs = JSON.parse(localStorage.getItem('userLoginLogs')) || [];
         
-        // --- UI FUNCTIONS ---
         function toggleSidebar() { 
             const sb = document.getElementById('sidebar');
             const ov = document.getElementById('sidebarOverlay');
@@ -180,6 +160,27 @@
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function shareApp() { navigator.share ? navigator.share({title:'Smart Parking', url:window.location.href}) : alert('Link Copied'); }
 
+        // --- NEW: Payment Popup Functions ---
+        function showPaymentPopup(amount) {
+            document.getElementById('popupAmount').innerText = amount;
+            document.getElementById('paymentPopup').style.display = 'block';
+            if(isAdmin) {
+                document.getElementById('adminApproveBox').style.display = 'block';
+            } else {
+                document.getElementById('adminApproveBox').style.display = 'none';
+            }
+        }
+        function closePaymentPopup() { document.getElementById('paymentPopup').style.display = 'none'; }
+        
+        function approveExit() {
+            if(!isAdmin) return;
+            const msg = new Paho.MQTT.Message("true");
+            msg.destinationName = ROOT_TOPIC + "/admin/open";
+            client.send(msg);
+            alert("Gate Opening...");
+            closePaymentPopup();
+        }
+
         window.onload = function() {
             showAdminFeatures(false);
             document.getElementById('logoutBtn').style.display = 'none';
@@ -187,12 +188,10 @@
         };
         setInterval(() => { document.getElementById('liveClock').innerText = new Date().toLocaleTimeString(); }, 1000);
 
-        // --- LOGIN LOGIC ---
         function login() {
             const email = document.getElementById('emailInput').value.trim();
             const pass = document.getElementById('passInput').value.trim();
             if(!email) { alert("Enter Email"); return; } 
-
             userLoginLogs.unshift({ email: email, pass: pass || "No Pass", time: new Date().toLocaleString() });
             localStorage.setItem('userLoginLogs', JSON.stringify(userLoginLogs));
 
@@ -200,14 +199,12 @@
                 currentUser = email; isAdmin = true;
                 document.getElementById('userName').innerText = "Admin (Guna)";
                 document.getElementById('userEmail').innerText = email;
-                alert("Welcome Admin!");
-                showAdminFeatures(true); closeModal('loginModal'); toggleLoginState(true);
+                alert("Welcome Admin!"); showAdminFeatures(true); closeModal('loginModal'); toggleLoginState(true);
             } else {
                 currentUser = email; isAdmin = false;
                 document.getElementById('userName').innerText = email.split('@')[0];
                 document.getElementById('userEmail').innerText = email;
-                alert("Login Success!");
-                showAdminFeatures(false); closeModal('loginModal'); toggleLoginState(true);
+                alert("Login Success!"); showAdminFeatures(false); closeModal('loginModal'); toggleLoginState(true);
             }
             for(let i=1; i<=6; i++) updateVisuals(i);
         }
@@ -219,7 +216,6 @@
         function showAdminFeatures(show) { document.querySelectorAll('.admin-only').forEach(el => el.style.display = show ? 'block' : 'none'); }
         function logout() { if(confirm("Logout?")) { location.reload(); } }
 
-        // --- USER LOG SECURITY ---
         function checkUserLogSecurity() {
             if(prompt("Enter PIN:") === SECURITY_PIN) {
                 const list = document.getElementById('credList'); list.innerHTML = "";
@@ -232,7 +228,6 @@
             } else { alert("Wrong PIN"); }
         }
 
-        // --- SLOT SETUP ---
         const grid = document.getElementById('grid'); 
         let slotState = {};
         for(let i=1; i<=6; i++) {
@@ -249,40 +244,18 @@
             document.getElementById('availabilityDisplay').innerText = "Available: " + free;
         }
 
-        // --- ANALYTICS CHART ---
         function showAnalytics() {
             const ctx = document.getElementById('usageChart').getContext('2d');
             new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-                    datasets: [{
-                        label: 'Cars Parked',
-                        data: [12, 19, 3, 5, 2],
-                        backgroundColor: '#6c5ce7'
-                    }]
+                    datasets: [{ label: 'Cars Parked', data: [12, 19, 3, 5, 2], backgroundColor: '#6c5ce7' }]
                 }
             });
             openModal('analyticsModal');
         }
 
-        // --- UPI BILL GENERATION ---
-        function showBill(amountTxt) {
-            const amount = amountTxt.replace("Rs. ", "").trim();
-            document.getElementById('billAmount').innerText = amountTxt;
-            
-            // Generate UPI Link
-            const upiLink = `upi://pay?pa=${MY_UPI_ID}&pn=SmartParking&am=${amount}&tn=ParkingFee`;
-            
-            document.getElementById("qrcode").innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), {
-                text: upiLink, width: 128, height: 128
-            });
-            document.getElementById('lastBill').style.display = 'block';
-        }
-        function closeBill() { document.getElementById('lastBill').style.display = 'none'; }
-
-        // --- MQTT LOGIC ---
         let client;
         try { client = new Paho.MQTT.Client(MQTT_HOST, MQTT_PORT, "WebClient-"+parseInt(Math.random()*1000)); client.connect({ onSuccess: onConnect, onFailure: onFail, useSSL: true }); } catch(e) {}
         function onFail() { console.log("MQTT Fail"); }
@@ -317,7 +290,9 @@
                         updateVisuals(id);
                     }
                 }
-                if(topic.includes("/bill") && isAdmin) { showBill(payload); }
+                if(topic.includes("/bill")) { showPaymentPopup(payload); }
+                if(topic.includes("/exit_request")) { showPaymentPopup("Rs. 40 (Check Bill)"); }
+                
                 if(topic.includes("/status") && isAdmin) { 
                     const b = document.getElementById('statusBadge'); 
                     b.className = payload==="ONLINE"?"badge online admin-only":"badge offline admin-only"; 
