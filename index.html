@@ -20,7 +20,7 @@
         .menu-btn { font-size: 32px; border: none; background: none; cursor: pointer; color: #fff; filter: drop-shadow(2px 2px 2px #000); padding: 10px; }
         .app-title { font-weight: 700; font-size: 1.8em; color: #fff; text-shadow: 2px 2px 4px #000; letter-spacing: 1px; margin: 0;}
         
-        /* --- NEW: PAYMENT POPUP STYLE --- */
+        /* PAYMENT POPUP STYLE */
         .payment-alert { display: none; background: #fff; border: 2px solid var(--danger); padding: 20px; border-radius: 15px; text-align: center; position: fixed; top: 10%; z-index: 3500; width: 90%; max-width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .admin-controls { display: none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
         .qr-image { width: 220px; height: auto; object-fit: contain; border: 1px solid #ddd; border-radius: 10px; margin: 10px 0; }
@@ -141,7 +141,6 @@
         const ADMIN_EMAIL = "maxguna9566@gmail.com";
         const ADMIN_PASS = "63803021"; 
         const SECURITY_PIN = "72120308";
-        // உங்கள் புது QR Code-ல் உள்ள UPI ID
         const MY_UPI_ID = "maxguna9566-3@okicici"; 
         const MQTT_HOST = "broker.hivemq.com";
         const MQTT_PORT = 8884; 
@@ -160,7 +159,7 @@
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function shareApp() { navigator.share ? navigator.share({title:'Smart Parking', url:window.location.href}) : alert('Link Copied'); }
 
-        // --- NEW: Payment Popup Functions ---
+        // --- Payment Popup Functions ---
         function showPaymentPopup(amount) {
             document.getElementById('popupAmount').innerText = amount;
             document.getElementById('paymentPopup').style.display = 'block';
