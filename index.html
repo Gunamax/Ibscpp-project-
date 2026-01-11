@@ -125,9 +125,9 @@
                 <p style="color:var(--danger); font-weight:bold; background:#ffecec; padding:5px; border-radius:5px;">⚠️ Exit Gate Closed</p>
                 <p>Vehicle Waiting at Exit</p>
                 
-                <img src="https://raw.githubusercontent.com/Gunamax/lbscp/main/my_qr.png" 
-                     alt="QR Code" class="qr-image" 
-                     onerror="this.style.display='none'; alert('QR Image Loading Error...');">
+                <img src="my_qr.png" 
+                     alt="Scan QR Code" class="qr-image" 
+                     onerror="console.log('QR waiting...');">
                 
                 <h1 id="clearanceAmount" style="color:#2d3436; margin:5px 0;">Rs. 40</h1>
                 
@@ -139,8 +139,8 @@
                 <div id="customerPayBtn" style="display:none;">
                     <p style="font-size:0.8em; color:#555;">Scan QR to Pay</p>
                     <button class="btn" onclick="customerPaidAction()" 
-                            style="background: #27ae60; margin-top:10px;">
-                        Payment Done
+                            style="background: #27ae60; margin-top:10px; font-size:1.1em; padding:15px;">
+                        Payment Done <i class="fas fa-check"></i>
                     </button>
                 </div>
             </div>
